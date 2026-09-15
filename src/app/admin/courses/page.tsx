@@ -2,6 +2,7 @@ import { asc } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ActionForm, FieldLabel } from "@/components/admin/action-form";
 import { updateCourseHub } from "@/lib/actions/admin";
+import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Course content" };
@@ -10,6 +11,9 @@ const inputCls =
   "w-full rounded-lg border border-line bg-white px-3 py-2 text-body";
 
 export default async function AdminCoursesPage() {
+  // Published course content is business-wide, not one counselor's caseload.
+  await requireAdmin();
+
   const hubs = await db.query.courseHubs.findMany({
     orderBy: [asc(schema.courseHubs.sortOrder)],
     with: { universities: { columns: { id: true } } },

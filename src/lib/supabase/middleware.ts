@@ -16,7 +16,11 @@ export async function updateSession(request: NextRequest) {
   // areas must stay shut. Everything else — the whole public site — is
   // served normally rather than 500-ing on a missing env var.
   if (!isSupabaseConfigured()) {
-    if (pathname.startsWith("/portal") || pathname.startsWith("/admin")) {
+    if (
+      pathname.startsWith("/portal") ||
+      pathname.startsWith("/account") ||
+      pathname.startsWith("/admin")
+    ) {
       const redirect = request.nextUrl.clone();
       redirect.pathname = "/login";
       redirect.search = "?error=auth_unavailable";
@@ -52,7 +56,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPortal = pathname.startsWith("/portal");
+  // The account area carries the data-principal rights surfaces, so it is
+  // gated exactly as the portal is: everything there acts on the signed-in
+  // person's own data.
+  const isPortal = pathname.startsWith("/portal") || pathname.startsWith("/account");
   const isAdmin = pathname.startsWith("/admin");
   const isAuthRoute =
     pathname.startsWith("/login") ||

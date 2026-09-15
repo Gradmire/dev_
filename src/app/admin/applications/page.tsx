@@ -4,6 +4,8 @@ import { ActionForm, FieldLabel } from "@/components/admin/action-form";
 import { updateApplicationStage, createApplication } from "@/lib/actions/admin";
 import { STAGES, stageLabel } from "@/lib/stages";
 import { currentIntake } from "@/config/site";
+import { requireStaff, scopeToStaff } from "@/lib/auth";
+import { logStaffAccess } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Applications" };
@@ -12,8 +14,14 @@ const inputCls =
   "w-full rounded-lg border border-line bg-white px-3 py-2 text-body";
 
 export default async function ApplicationsPage() {
+  const context = await requireStaff();
+
   const [applications, hubs] = await Promise.all([
     db.query.applications.findMany({
+      // Counselors see the caseload they are assigned; admins see all of it.
+      where: scopeToStaff(context, schema.applications.assignedStaffId, {
+        includeUnassigned: true,
+      }),
       orderBy: [desc(schema.applications.updatedAt)],
       limit: 100,
       with: { applicant: true },
@@ -24,6 +32,12 @@ export default async function ApplicationsPage() {
       limit: 200,
     }),
   ]);
+
+  await logStaffAccess(context, {
+    action: "list",
+    resourceType: "applications",
+    rowCount: applications.length,
+  });
 
   return (
     <>

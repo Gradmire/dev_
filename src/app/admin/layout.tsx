@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 };
 
 const NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/leads", label: "Leads" },
-  { href: "/admin/applications", label: "Applications" },
-  { href: "/admin/courses", label: "Course content" },
+  { href: "/admin", label: "Overview", adminOnly: false },
+  { href: "/admin/leads", label: "Leads", adminOnly: false },
+  { href: "/admin/applications", label: "Applications", adminOnly: false },
+  { href: "/admin/courses", label: "Course content", adminOnly: true },
+  { href: "/admin/privacy", label: "Privacy & rights", adminOnly: true },
 ];
 
 export default async function AdminLayout({
@@ -20,7 +21,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { staff } = await requireStaff();
+  const { staff, isAdmin } = await requireStaff();
+  // Hiding the link is presentation only — requireAdmin on each page is what
+  // actually enforces this. A nav that filters but a route that does not is
+  // an access control in appearance only.
+  const nav = NAV.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <div className="min-h-screen bg-paper-dim">
@@ -35,7 +40,7 @@ export default async function AdminLayout({
               </span>
             </Link>
             <nav aria-label="Admin" className="flex flex-wrap gap-5">
-              {NAV.map((l) => (
+              {nav.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}

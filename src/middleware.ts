@@ -14,6 +14,7 @@ export const config = {
    */
   matcher: [
     "/portal/:path*",
+    "/account/:path*",
     "/admin/:path*",
     "/login/:path*",
     "/signup/:path*",

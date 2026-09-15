@@ -112,3 +112,72 @@ export function upcomingIntakes(now: Date = new Date(), count = 3): string[] {
 export function currentIntake(now: Date = new Date()): string {
   return upcomingIntakes(now, 1)[0] ?? "";
 }
+
+/* ------------------------------------------------------------------ */
+/* DPDP Act, 2023 — published compliance contacts and commitments      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The Grievance Officer, whose contact details s.13(3) requires to be
+ * published. Name and address are env-overridable so the deploy can name a
+ * real person without a code change, but the fallbacks are deliberately a
+ * role address rather than a placeholder — an unset var must still reach
+ * somebody, not print "TODO" on a statutory contact point.
+ */
+export const GRIEVANCE_OFFICER = {
+  name: process.env.NEXT_PUBLIC_GRIEVANCE_OFFICER_NAME ?? "The Grievance Officer",
+  email: process.env.NEXT_PUBLIC_GRIEVANCE_OFFICER_EMAIL ?? "privacy@gradmire.com",
+} as const;
+
+/**
+ * Published response times. These are promises to the data principal, so they
+ * are stated once here and rendered from this constant everywhere — a
+ * commitment that appears with two different numbers on two pages is worse
+ * than no commitment.
+ *
+ * The Act sets no fixed clock for a grievance; 30 days is the period the
+ * draft rules work to and is what is published. Erasure and export are
+ * immediate because they are self-service.
+ */
+export const RIGHTS_SLA = {
+  /** Calendar days to resolve a grievance (s.13). */
+  grievanceDays: 30,
+  /** Calendar days to action a correction request (s.12). */
+  correctionDays: 15,
+  /** Hours to notify the Board and affected users of a breach (s.8(6)). */
+  breachNotificationHours: 72,
+} as const;
+
+/** Where personal data is processed. Disclosed under s.16 (cross-border). */
+export const DATA_LOCATIONS = [
+  {
+    name: "Supabase (database and authentication)",
+    region: "Singapore (AWS ap-southeast-1)",
+  },
+  { name: "Vercel (application hosting)", region: "Singapore (sin1)" },
+] as const;
+
+/**
+ * Storage limitation (DPDP s.8(7)).
+ *
+ * These are the periods published in the privacy policy and enforced by the
+ * nightly purge in lib/retention.ts. They live here, next to the other
+ * published commitments, so the page a person reads and the job that deletes
+ * their data are reading the same numbers — a policy promising 24 months over
+ * a job doing 36 is a misrepresentation, not a stale document.
+ */
+export const RETENTION = {
+  /** Enquiries: from last contact, not first. Mirrors `core_service`. */
+  leadMonths: 24,
+  /** Unsubscribed addresses, kept only long enough to honour the opt-out. */
+  unsubscribedMonths: 6,
+  /** Parental links that were never used — they hold a third party's address. */
+  staleParentalRequestDays: 90,
+  /**
+   * Audit trail. Long enough to investigate a breach discovered late, short
+   * enough that the log is not itself a permanent record of who contacted us.
+   */
+  accessLogMonths: 18,
+  /** Withdrawn applications, anonymised at this point rather than deleted. */
+  closedApplicationMonths: 24,
+} as const;

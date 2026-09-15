@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { SUPABASE_ROOT_CA } from "./supabase-ca";
 
 /**
  * The client is created on first use rather than at import time. A build
@@ -17,6 +18,69 @@ const globalForDb = globalThis as unknown as {
 
 export function isDatabaseConfigured() {
   return Boolean(process.env.DATABASE_URL);
+}
+
+/**
+ * TLS for the database connection (DPDP s.8 — data in transit).
+ *
+ * This has to be set in code, and it has to be set to a CA, because
+ * postgres-js gets every default here wrong for our purposes:
+ *
+ *   - With no `ssl` option and no `sslmode` in the URL the default is
+ *     `ssl: false`, and the driver never even sends an SSLRequest. The
+ *     connection to Supabase was plaintext.
+ *   - `?sslmode=require` in the URL is *not* the fix. postgres-js maps
+ *     `require`, `allow` and `prefer` to `rejectUnauthorized = false`
+ *     (src/connection.js), so traffic is encrypted and the server's
+ *     certificate is never checked — which stops passive sniffing and does
+ *     nothing whatsoever about an active machine-in-the-middle.
+ *   - `verify-full` against the system CA store cannot work either. Supabase's
+ *     pooler presents `CN=*.pooler.supabase.com` issued by `Supabase
+ *     Intermediate 2021 CA` under a self-signed `Supabase Root 2021 CA` — a
+ *     private root that is not in anyone's system trust store, so Node
+ *     rejects the chain with SELF_SIGNED_CERT_IN_CHAIN.
+ *
+ * So the root is pinned. Passing `{ ca }` as an object takes the
+ * `typeof ssl === 'object'` branch, which merges over postgres-js's defaults
+ * and therefore keeps `servername` (SNI, and the hostname check against the
+ * SAN) while leaving `rejectUnauthorized` at Node's default of true.
+ *
+ * Pinning a private root is stronger than public verify-full, not weaker:
+ * only Supabase's own CA can vouch for the host, so a certificate
+ * mis-issued by any public CA is useless to an attacker.
+ *
+ * Set here rather than in the URL deliberately — an option in `o` beats the
+ * connection string (src/index.js, parseOptions), so no amount of editing
+ * DATABASE_URL in a hosting dashboard can quietly downgrade the connection.
+ */
+type SslConfig = { ca: string } | "require" | false;
+
+function databaseSsl(): SslConfig {
+  const override = process.env.DATABASE_SSL_MODE;
+
+  // Escape hatch for a rotated root or a non-Supabase host. Encrypted but
+  // unauthenticated — meant to be loud, and to belong in a ticket.
+  if (override === "require") {
+    console.warn(
+      "[db] DATABASE_SSL_MODE=require — traffic is encrypted but the server certificate is NOT verified. This is a temporary workaround, not a configuration.",
+    );
+    return "require";
+  }
+
+  // Only ever for a local Postgres on a loopback socket. Refused outright in
+  // production, where a typo in an env var must not be able to turn
+  // encryption off for everyone's personal data.
+  if (override === "disable") {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "DATABASE_SSL_MODE=disable is not permitted in production: personal data must not cross the network unencrypted.",
+      );
+    }
+    console.warn("[db] TLS disabled — local development only.");
+    return false;
+  }
+
+  return { ca: SUPABASE_ROOT_CA };
 }
 
 function getDb() {
@@ -38,6 +102,7 @@ function getDb() {
       max: Number(process.env.DATABASE_POOL_MAX ?? 10),
       idle_timeout: 20,
       connect_timeout: 10,
+      ssl: databaseSsl(),
     });
 
   const instance = drizzle(client, { schema });

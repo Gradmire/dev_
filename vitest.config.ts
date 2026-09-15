@@ -11,6 +11,20 @@ import tsconfigPaths from "vite-tsconfig-paths";
  */
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  resolve: {
+    alias: {
+      /*
+       * `server-only` is a build-time guard, not a runtime module: Next
+       * resolves it to a stub that throws only if a client bundle pulls it
+       * in. Vitest has no such resolution, so importing any module that
+       * guards itself with it — lib/auth.ts, and every other server helper —
+       * fails to load. Aliased to an empty module so those modules can be
+       * unit tested; the guard itself is still enforced where it matters, by
+       * the real build.
+       */
+      "server-only": new URL("./tests/stubs/server-only.ts", import.meta.url).pathname,
+    },
+  },
   test: {
     include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
     // Explicit imports from "vitest" rather than ambient globals, so tsc

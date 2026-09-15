@@ -57,7 +57,7 @@ export async function SiteFooter() {
   return (
     <footer className="bg-ink text-paper/70">
       <Container className="gutter">
-        <div className="grid grid-cols-2 gap-8 border-b border-white/10 py-[60px] md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-8 border-b border-white/10 py-16 md:grid-cols-3 lg:grid-cols-5">
           <div className="col-span-2 lg:col-span-1">
             {/* Knocked out in white rather than navy-and-sky: the sky cap sits
                 at 2.78:1 on this background and would vanish. */}
@@ -98,6 +98,13 @@ export async function SiteFooter() {
           <span className="flex gap-5">
             <Link href="/privacy" className="py-2 hover:text-white">Privacy</Link>
             <Link href="/terms" className="py-2 hover:text-white">Terms</Link>
+            {/*
+              The rights surfaces need a permanent home in the chrome, not just
+              a link from the policy — s.13(3) wants the grievance route
+              published, and a right nobody can find is not much of a right.
+            */}
+            <Link href="/account/consent" className="py-2 hover:text-white">Your data</Link>
+            <Link href="/grievance" className="py-2 hover:text-white">Grievance</Link>
           </span>
         </div>
       </Container>

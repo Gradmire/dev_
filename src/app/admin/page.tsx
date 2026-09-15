@@ -1,14 +1,31 @@
 import Link from "next/link";
-import { desc, eq, count } from "drizzle-orm";
+import { desc, eq, count, and } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { requireStaff, scopeToStaff } from "@/lib/auth";
+import { logStaffAccess } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverview() {
+  const context = await requireStaff();
+
+  // The tiles are scoped as well as the lists. A count is a small leak, but
+  // it is still a leak: "how many enquiries came in this week" is not a
+  // counselor's to know if the enquiries themselves are not theirs to read.
+  const leadScope = scopeToStaff(context, schema.leads.assignedStaffId, {
+    includeUnassigned: true,
+  });
+  const appScope = scopeToStaff(context, schema.applications.assignedStaffId, {
+    includeUnassigned: true,
+  });
+
   const [newLeads, openApplications, liveHubs, staleHubs, recentLeads] =
     await Promise.all([
-      db.select({ n: count() }).from(schema.leads).where(eq(schema.leads.status, "new")),
-      db.select({ n: count() }).from(schema.applications),
+      db
+        .select({ n: count() })
+        .from(schema.leads)
+        .where(and(eq(schema.leads.status, "new"), leadScope)),
+      db.select({ n: count() }).from(schema.applications).where(appScope),
       db
         .select({ n: count() })
         .from(schema.courseHubs)
@@ -19,10 +36,17 @@ export default async function AdminOverview() {
         limit: 200,
       }),
       db.query.leads.findMany({
+        where: leadScope,
         orderBy: [desc(schema.leads.createdAt)],
         limit: 8,
       }),
     ]);
+
+  await logStaffAccess(context, {
+    action: "list",
+    resourceType: "leads",
+    rowCount: recentLeads.length,
+  });
 
   const unverified = staleHubs.filter((h) => !h.dataVerifiedAt);
 

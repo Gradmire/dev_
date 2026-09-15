@@ -1,23 +1,43 @@
 import { desc } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ActionForm } from "@/components/admin/action-form";
-import { updateLeadStatus } from "@/lib/actions/admin";
+import { updateLeadStatus, claimLead } from "@/lib/actions/admin";
+import { requireStaff, scopeToStaff } from "@/lib/auth";
+import { logStaffAccess } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Leads" };
 
 export default async function LeadsPage() {
+  const context = await requireStaff();
+
   const leads = await db.query.leads.findMany({
+    // A counselor sees their own plus the unclaimed intake pool; an admin
+    // sees everything. See scopeToStaff for why unassigned is included.
+    where: scopeToStaff(context, schema.leads.assignedStaffId, {
+      includeUnassigned: true,
+    }),
     orderBy: [desc(schema.leads.createdAt)],
     limit: 100,
-    with: { courseHub: { columns: { name: true } } },
+    with: {
+      courseHub: { columns: { name: true } },
+      assignedStaff: { columns: { id: true, fullName: true, email: true } },
+    },
+  });
+
+  await logStaffAccess(context, {
+    action: "list",
+    resourceType: "leads",
+    rowCount: leads.length,
   });
 
   return (
     <>
       <h1 className="mb-2 text-[30px] font-semibold">Leads</h1>
       <p className="mb-8 text-[14.5px] text-ink-soft">
-        Consultation requests from the site, newest first.
+        {context.isAdmin
+          ? "Every consultation request, newest first."
+          : "Your enquiries, plus any not yet claimed by a counselor. Newest first."}
       </p>
 
       {leads.length === 0 ? (
@@ -38,9 +58,22 @@ export default async function LeadsPage() {
                     {lead.phone && ` · ${lead.phone}`}
                   </p>
                 </div>
-                <span className="font-mono text-mini uppercase tracking-wider text-ink-soft">
-                  {lead.createdAt.toLocaleString("en-GB")}
-                </span>
+                <div className="text-right">
+                  <span className="block font-mono text-mini uppercase tracking-wider text-ink-soft">
+                    {lead.createdAt.toLocaleString("en-GB")}
+                  </span>
+                  <span className="mt-1 block font-mono text-mini uppercase tracking-wider">
+                    {lead.assignedStaff ? (
+                      <span className="text-ink-soft">
+                        {lead.assignedStaff.id === context.staff.id
+                          ? "Yours"
+                          : (lead.assignedStaff.fullName ?? lead.assignedStaff.email)}
+                      </span>
+                    ) : (
+                      <span className="text-sky-text">Unclaimed</span>
+                    )}
+                  </span>
+                </div>
               </div>
 
               <dl className="mb-3 grid gap-2 text-body sm:grid-cols-3">
@@ -62,6 +95,12 @@ export default async function LeadsPage() {
                 <p className="mb-3 rounded-lg bg-paper-dim px-4 py-3 text-body">
                   {lead.message}
                 </p>
+              )}
+
+              {!lead.assignedStaffId && (
+                <ActionForm action={claimLead} submitLabel="Claim this enquiry">
+                  <input type="hidden" name="leadId" value={lead.id} />
+                </ActionForm>
               )}
 
               <ActionForm action={updateLeadStatus} submitLabel="Update">

@@ -70,3 +70,28 @@ create policy "events readable by owner" on application_events
 -- Leads, subscribers and staff are never readable through the API.
 -- No select policy is defined, so RLS denies by default.
 -- ---------------------------------------------------------------
+
+-- ---------------------------------------------------------------
+-- DPDP tables (consent, children's data, data principal rights).
+--
+-- RLS is enabled with no policy at all, which denies everything: these
+-- tables are reachable only through the server, which connects as the
+-- owner. That matters more here than elsewhere — `consent_records` is the
+-- evidence that processing was lawful, and `parental_consent_requests`
+-- holds a third party's email address alongside a child's.
+--
+-- Deliberately no "read your own" policy, unlike `applicants`. Nothing in
+-- the app reads these through the anon key, so a policy would only widen
+-- the surface without being used.
+-- ---------------------------------------------------------------
+alter table consent_records            enable row level security;
+alter table parental_consent_requests  enable row level security;
+alter table data_export_requests       enable row level security;
+alter table deletion_requests          enable row level security;
+alter table correction_requests        enable row level security;
+alter table grievances                 enable row level security;
+alter table nominations                enable row level security;
+
+-- Access log. No policy: the audit trail must not be readable through the
+-- API at all, least of all by the accounts it exists to hold to account.
+alter table access_logs enable row level security;
