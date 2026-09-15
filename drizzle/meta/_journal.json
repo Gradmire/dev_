@@ -29,6 +29,13 @@
       "when": 1789475299118,
       "tag": "0003_access_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789476973217,
+      "tag": "0004_perf_indexes",
+      "breakpoints": true
     }
   ]
 }

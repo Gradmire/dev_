@@ -1,4 +1,4 @@
-import { desc, eq, or } from "drizzle-orm";
+import { desc, eq, or, count } from "drizzle-orm";
 import { ShieldAlert, Clock } from "lucide-react";
 import { db, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
@@ -6,6 +6,8 @@ import { logStaffAccess } from "@/lib/audit";
 import { RIGHTS_SLA } from "@/config/site";
 import { CONSENT_PURPOSES, isPurposeKey } from "@/lib/consent/purposes";
 import { ActionForm } from "@/components/admin/action-form";
+import { Pager } from "@/components/admin/pager";
+import { readPage, pageInfo } from "@/lib/pagination";
 import { resolveCorrectionRequest, resolveGrievance } from "@/lib/actions/admin";
 
 export const dynamic = "force-dynamic";
@@ -50,12 +52,32 @@ function Empty({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function AdminPrivacyPage() {
+export default async function AdminPrivacyPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const context = await requireAdmin();
   const now = new Date();
+  const params = await searchParams;
 
-  const [corrections, grievanceRows, deletions, exports, recentConsent, recentAccess] =
-    await Promise.all([
+  // The two append-only ledgers are the only lists here that grow without
+  // bound — one row per consent decision, one per personal-data access — so
+  // they page, on separate parameters so neither resets the other. The
+  // request queues are bounded by how many are actually outstanding.
+  const consentPage = readPage(params, { key: "consent", pageSize: 40 });
+  const accessPage = readPage(params, { key: "access", pageSize: 50 });
+
+  const [
+    corrections,
+    grievanceRows,
+    deletions,
+    exports,
+    recentConsent,
+    recentAccess,
+    consentTotal,
+    accessTotal,
+  ] = await Promise.all([
       db.query.correctionRequests.findMany({
         where: or(
           eq(schema.correctionRequests.status, "received"),
@@ -78,13 +100,20 @@ export default async function AdminPrivacyPage() {
       }),
       db.query.consentRecords.findMany({
         orderBy: [desc(schema.consentRecords.createdAt)],
-        limit: 40,
+        limit: consentPage.pageSize,
+        offset: consentPage.offset,
       }),
       db.query.accessLogs.findMany({
         orderBy: [desc(schema.accessLogs.createdAt)],
-        limit: 60,
+        limit: accessPage.pageSize,
+        offset: accessPage.offset,
       }),
+      db.select({ n: count() }).from(schema.consentRecords),
+      db.select({ n: count() }).from(schema.accessLogs),
     ]);
+
+  const consentInfo = pageInfo(consentPage, consentTotal[0]?.n ?? 0);
+  const accessInfo = pageInfo(accessPage, accessTotal[0]?.n ?? 0);
 
   // Reading the ledger is itself an access to personal data, and is logged
   // like any other. An audit surface exempt from its own audit is theatre.
@@ -346,6 +375,12 @@ export default async function AdminPrivacyPage() {
             </tbody>
           </table>
         </div>
+        <Pager
+          info={consentInfo}
+          basePath="/admin/privacy"
+          searchParams={params}
+          label="consent records"
+        />
       </Panel>
 
       <Panel
@@ -385,6 +420,12 @@ export default async function AdminPrivacyPage() {
             </tbody>
           </table>
         </div>
+        <Pager
+          info={accessInfo}
+          basePath="/admin/privacy"
+          searchParams={params}
+          label="access records"
+        />
       </Panel>
     </>
   );

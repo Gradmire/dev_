@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, lte } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ageBand } from "./age";
 
@@ -92,21 +92,23 @@ export async function mayProgressBeyondEnquiry(
   return { allowed, gate };
 }
 
-/** Marks overdue pending requests as expired. Called before issuing a new one. */
+/**
+ * Marks overdue pending requests as expired. Called before issuing a new one.
+ *
+ * One statement. This read every pending row, filtered them in JavaScript,
+ * then issued an UPDATE per stale row — a select plus N writes to do what the
+ * predicate expresses directly. The comparison belongs in SQL, where the
+ * index on `subject_email` can serve it and the row count stops mattering.
+ */
 export async function expireStaleRequests(subjectEmail: string, now: Date = new Date()) {
-  const rows = await db.query.parentalConsentRequests.findMany({
-    where: and(
-      eq(schema.parentalConsentRequests.subjectEmail, subjectEmail.toLowerCase()),
-      eq(schema.parentalConsentRequests.status, "pending"),
-    ),
-    columns: { id: true, expiresAt: true },
-  });
-
-  const stale = rows.filter((r) => r.expiresAt <= now);
-  for (const row of stale) {
-    await db
-      .update(schema.parentalConsentRequests)
-      .set({ status: "expired" })
-      .where(eq(schema.parentalConsentRequests.id, row.id));
-  }
+  await db
+    .update(schema.parentalConsentRequests)
+    .set({ status: "expired" })
+    .where(
+      and(
+        eq(schema.parentalConsentRequests.subjectEmail, subjectEmail.toLowerCase()),
+        eq(schema.parentalConsentRequests.status, "pending"),
+        lte(schema.parentalConsentRequests.expiresAt, now),
+      ),
+    );
 }

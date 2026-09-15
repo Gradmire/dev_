@@ -260,6 +260,14 @@ export const applications = pgTable(
     refIdx: uniqueIndex("applications_reference_idx").on(t.reference),
     applicantIdx: index("applications_applicant_idx").on(t.applicantId),
     stageIdx: index("applications_stage_idx").on(t.stage),
+    /**
+     * `scopeToStaff` filters every admin read by this column, and `leads`
+     * gained the matching index when assignment was added there. This one was
+     * missed — the same filter on the larger of the two tables.
+     */
+    assignedIdx: index("applications_assigned_idx").on(t.assignedStaffId),
+    /** Both the admin list and the portal order by this. */
+    updatedIdx: index("applications_updated_idx").on(t.updatedAt),
   }),
 );
 
@@ -320,6 +328,16 @@ export const leads = pgTable(
     createdIdx: index("leads_created_idx").on(t.createdAt),
     statusIdx: index("leads_status_idx").on(t.status),
     assignedIdx: index("leads_assigned_idx").on(t.assignedStaffId),
+    /**
+     * Not unique — one person may send several enquiries, which is the whole
+     * reason `leads` has no unique constraint the way `applicants` does. But
+     * every erasure and every export looks a person up by address across all
+     * three tables (lib/rights/collect.ts), and this was the only one of the
+     * three without an index to do it on.
+     */
+    emailIdx: index("leads_email_idx").on(t.email),
+    /** The retention purge scans by last contact. */
+    updatedIdx: index("leads_updated_idx").on(t.updatedAt),
   }),
 );
 
@@ -344,6 +362,16 @@ export const newsletterSubscribers = pgTable(
   },
   (t) => ({
     emailIdx: uniqueIndex("newsletter_email_idx").on(t.email),
+    /**
+     * Every click of an unsubscribe link resolves a row by this token, on an
+     * unauthenticated endpoint. Unique rather than plain: Postgres allows any
+     * number of NULLs in a unique index, so rows predating the column are
+     * unaffected, and a token collision becomes impossible rather than
+     * merely unlikely.
+     */
+    unsubscribeTokenIdx: uniqueIndex("newsletter_unsubscribe_token_idx").on(
+      t.unsubscribeToken,
+    ),
   }),
 );
 
@@ -495,6 +523,12 @@ export const consentRecords = pgTable(
   (t) => ({
     // The hot read is "newest row per purpose for this person".
     subjectIdx: index("consent_records_subject_idx").on(t.subjectEmail, t.purposeKey, t.createdAt),
+    /**
+     * The composite above leads with subject_email, so it cannot serve the
+     * admin ledger's "newest 40 across everyone" — that needs created_at on
+     * its own or Postgres sorts the whole table.
+     */
+    createdIdx: index("consent_records_created_idx").on(t.createdAt),
   }),
 );
 
@@ -534,6 +568,8 @@ export const parentalConsentRequests = pgTable(
   (t) => ({
     tokenIdx: uniqueIndex("parental_consent_token_idx").on(t.tokenHash),
     subjectIdx: index("parental_consent_subject_idx").on(t.subjectEmail),
+    /** The retention purge sweeps abandoned requests by age. */
+    createdIdx: index("parental_consent_created_idx").on(t.createdAt),
   }),
 );
 
@@ -553,6 +589,7 @@ export const dataExportRequests = pgTable(
   },
   (t) => ({
     subjectIdx: index("data_export_requests_subject_idx").on(t.subjectEmail),
+    createdIdx: index("data_export_requests_created_idx").on(t.createdAt),
   }),
 );
 
@@ -583,6 +620,7 @@ export const deletionRequests = pgTable(
   },
   (t) => ({
     subjectIdx: index("deletion_requests_subject_idx").on(t.subjectEmail),
+    createdIdx: index("deletion_requests_created_idx").on(t.createdAt),
   }),
 );
 
@@ -612,6 +650,20 @@ export const correctionRequests = pgTable(
   (t) => ({
     subjectIdx: index("correction_requests_subject_idx").on(t.subjectEmail),
     statusIdx: index("correction_requests_status_idx").on(t.status),
+    /**
+     * The admin queue filters on status and orders by age in one query, which
+     * the single-column status index above cannot serve on its own.
+     *
+     * That makes `correction_requests_status_idx` redundant — this index has
+     * `status` as its leading column and answers everything the older one
+     * does. It is deliberately left in place rather than dropped here: the
+     * brief was not to touch existing indexes without flagging, and dropping
+     * it belongs in its own change. See docs/perf/index-audit.md.
+     */
+    statusCreatedIdx: index("correction_requests_status_created_idx").on(
+      t.status,
+      t.createdAt,
+    ),
   }),
 );
 
@@ -645,6 +697,7 @@ export const grievances = pgTable(
     refIdx: uniqueIndex("grievances_reference_idx").on(t.reference),
     subjectIdx: index("grievances_subject_idx").on(t.subjectEmail),
     statusIdx: index("grievances_status_idx").on(t.status),
+    createdIdx: index("grievances_created_idx").on(t.createdAt),
   }),
 );
 

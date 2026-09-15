@@ -1,29 +1,46 @@
-import { desc } from "drizzle-orm";
+import { desc, count } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ActionForm } from "@/components/admin/action-form";
 import { updateLeadStatus, claimLead } from "@/lib/actions/admin";
 import { requireStaff, scopeToStaff } from "@/lib/auth";
 import { logStaffAccess } from "@/lib/audit";
+import { readPage, pageInfo } from "@/lib/pagination";
+import { Pager } from "@/components/admin/pager";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Leads" };
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const context = await requireStaff();
+  const params = await searchParams;
+  const page = readPage(params);
 
-  const leads = await db.query.leads.findMany({
-    // A counselor sees their own plus the unclaimed intake pool; an admin
-    // sees everything. See scopeToStaff for why unassigned is included.
-    where: scopeToStaff(context, schema.leads.assignedStaffId, {
-      includeUnassigned: true,
-    }),
-    orderBy: [desc(schema.leads.createdAt)],
-    limit: 100,
-    with: {
-      courseHub: { columns: { name: true } },
-      assignedStaff: { columns: { id: true, fullName: true, email: true } },
-    },
+  // A counselor sees their own plus the unclaimed intake pool; an admin sees
+  // everything. Built once and reused for both the page and the count, so
+  // the total can never describe a different set than the rows do.
+  const scope = scopeToStaff(context, schema.leads.assignedStaffId, {
+    includeUnassigned: true,
   });
+
+  const [leads, totals] = await Promise.all([
+    db.query.leads.findMany({
+      where: scope,
+      orderBy: [desc(schema.leads.createdAt)],
+      limit: page.pageSize,
+      offset: page.offset,
+      with: {
+        courseHub: { columns: { name: true } },
+        assignedStaff: { columns: { id: true, fullName: true, email: true } },
+      },
+    }),
+    db.select({ n: count() }).from(schema.leads).where(scope),
+  ]);
+
+  const info = pageInfo(page, totals[0]?.n ?? 0);
 
   await logStaffAccess(context, {
     action: "list",
@@ -125,6 +142,8 @@ export default async function LeadsPage() {
           ))}
         </ul>
       )}
+
+      <Pager info={info} basePath="/admin/leads" searchParams={params} label="enquiries" />
     </>
   );
 }

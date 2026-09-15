@@ -83,6 +83,33 @@ function databaseSsl(): SslConfig {
   return { ca: SUPABASE_ROOT_CA };
 }
 
+/**
+ * Prints every statement Drizzle emits, with a running count, when
+ * `DB_QUERY_LOG=1`.
+ *
+ * Exists to make N+1 answerable rather than arguable. Drizzle's relational
+ * `with` compiles to a single statement with lateral subqueries, but that is
+ * a property of the query builder rather than a guarantee of the API, and
+ * "it probably does one query" is not something to take on trust about a
+ * list that grows with the caseload. Turn it on, load the page, read the
+ * count.
+ *
+ * Off unless explicitly enabled: the statements contain query parameters,
+ * which for these tables means personal data, and that has no business in
+ * production logs.
+ */
+function queryLogger() {
+  if (process.env.DB_QUERY_LOG !== "1") return undefined;
+  let count = 0;
+  return {
+    logQuery(query: string, params: unknown[]) {
+      count++;
+      console.log(`\n[db ${count}] ${query}`);
+      if (params.length) console.log(`        params: ${JSON.stringify(params)}`);
+    },
+  };
+}
+
 function getDb() {
   if (globalForDb.gradmireDrizzle) return globalForDb.gradmireDrizzle;
 
@@ -105,7 +132,7 @@ function getDb() {
       ssl: databaseSsl(),
     });
 
-  const instance = drizzle(client, { schema });
+  const instance = drizzle(client, { schema, logger: queryLogger() });
 
   // Memoized in every environment, production included. Caching only in dev
   // meant each property access on the proxy below built a fresh pool — a new

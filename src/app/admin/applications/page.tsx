@@ -1,4 +1,4 @@
-import { desc, asc } from "drizzle-orm";
+import { desc, asc, count } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ActionForm, FieldLabel } from "@/components/admin/action-form";
 import { updateApplicationStage, createApplication } from "@/lib/actions/admin";
@@ -6,6 +6,8 @@ import { STAGES, stageLabel } from "@/lib/stages";
 import { currentIntake } from "@/config/site";
 import { requireStaff, scopeToStaff } from "@/lib/auth";
 import { logStaffAccess } from "@/lib/audit";
+import { readPage, pageInfo } from "@/lib/pagination";
+import { Pager } from "@/components/admin/pager";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Applications" };
@@ -13,17 +15,27 @@ export const metadata = { title: "Applications" };
 const inputCls =
   "w-full rounded-lg border border-line bg-white px-3 py-2 text-body";
 
-export default async function ApplicationsPage() {
+export default async function ApplicationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const context = await requireStaff();
+  const params = await searchParams;
+  const page = readPage(params);
 
-  const [applications, hubs] = await Promise.all([
+  // Counselors see the caseload they are assigned; admins see all of it.
+  // One scope, used by both the page query and the count.
+  const scope = scopeToStaff(context, schema.applications.assignedStaffId, {
+    includeUnassigned: true,
+  });
+
+  const [applications, hubs, totals] = await Promise.all([
     db.query.applications.findMany({
-      // Counselors see the caseload they are assigned; admins see all of it.
-      where: scopeToStaff(context, schema.applications.assignedStaffId, {
-        includeUnassigned: true,
-      }),
+      where: scope,
       orderBy: [desc(schema.applications.updatedAt)],
-      limit: 100,
+      limit: page.pageSize,
+      offset: page.offset,
       with: { applicant: true },
     }),
     db.query.courseHubs.findMany({
@@ -31,7 +43,10 @@ export default async function ApplicationsPage() {
       columns: { id: true, name: true },
       limit: 200,
     }),
+    db.select({ n: count() }).from(schema.applications).where(scope),
   ]);
+
+  const info = pageInfo(page, totals[0]?.n ?? 0);
 
   await logStaffAccess(context, {
     action: "list",
@@ -143,6 +158,13 @@ export default async function ApplicationsPage() {
           ))}
         </ul>
       )}
+
+      <Pager
+        info={info}
+        basePath="/admin/applications"
+        searchParams={params}
+        label="applications"
+      />
     </>
   );
 }

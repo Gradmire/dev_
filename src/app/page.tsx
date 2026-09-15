@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
@@ -325,14 +326,15 @@ export default async function HomePage() {
             </Reveal>
             {/* Numbered because this is a real sequence — each stage depends on the last. */}
             <Reveal as="ol" group step={110} className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Reveal supplies the <li> wrapper that carries the stagger. */}
               {STEPS.map((step, i) => (
-                <li key={step.title}>
+                <Fragment key={step.title}>
                   <div className="mb-5 flex h-[68px] w-[68px] items-center justify-center rounded-full border-[1.5px] border-ink font-display text-[22px]">
                     {String(i + 1).padStart(2, "0")}
                   </div>
                   <h3 className="mb-2 text-h6">{step.title}</h3>
                   <p className="text-body text-ink-soft">{step.body}</p>
-                </li>
+                </Fragment>
               ))}
             </Reveal>
           </Container>

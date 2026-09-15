@@ -34,7 +34,13 @@ const item: Variants = {
 type Props = {
   children: React.ReactNode;
   className?: string;
-  /** Move the direct children in sequence instead of the wrapper as one block. */
+  /**
+   * Move the direct children in sequence instead of the wrapper as one block.
+   *
+   * Each child is wrapped in an element of its own to carry the stagger. When
+   * `as` is a list that wrapper is the <li>, so children should be the item
+   * *contents* — a keyed Fragment, not a nested <li>.
+   */
   group?: boolean;
   /** ms between children. Ignored unless `group`. */
   step?: number;
@@ -53,6 +59,16 @@ export function Reveal({
 }: Props) {
   const shouldReduceMotion = useReducedMotion();
   const Tag = motion[as];
+
+  /*
+   * The per-child wrapper has to be a valid child of `as`. Staggering a grid
+   * rendered as <ol> was wrapping every item in a <div>, producing
+   * <ol><div><li>…</li></div></ol> — which axe flags twice over (a list with
+   * non-<li> children, and list items with no list parent) and which drops
+   * the group from the accessibility tree as a list at all, so a screen
+   * reader never announces "list, 4 items".
+   */
+  const Item = as === "div" ? motion.div : motion.li;
 
   if (!group) {
     return (
@@ -87,7 +103,7 @@ export function Reveal({
       }}
     >
       {Children.map(children, (child, i) => (
-        <motion.div
+        <Item
           // Real elements keep their own key so list reordering stays stable;
           // fragments/text fall back to index, matching Children.map's own default.
           key={isValidElement(child) && child.key !== null ? child.key : i}
@@ -96,7 +112,7 @@ export function Reveal({
           transition={{ duration: DURATION, ease: EASE }}
         >
           {child}
-        </motion.div>
+        </Item>
       ))}
     </Tag>
   );
