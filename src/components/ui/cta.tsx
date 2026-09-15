@@ -1,6 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+
+const MotionLink = motion(Link);
+
+const TAP_TRANSITION = { duration: 0.15, ease: "easeOut" } as const;
 
 /**
  * The pill call-to-action.
@@ -51,6 +58,14 @@ const ctaVariants = cva(
 
 type CtaProps = VariantProps<typeof ctaVariants> & { className?: string };
 
+// framer-motion redefines onAnimationStart/onAnimationEnd (they take an
+// animation definition, not a DOM AnimationEvent), so the native HTML
+// attribute types must be stripped of them before reaching motion(...).
+type MotionSafe<T> = Omit<
+  T,
+  "onAnimationStart" | "onAnimationEnd" | "onDrag" | "onDragStart" | "onDragEnd"
+>;
+
 /** Renders a link. Use `CtaButton` for a form submit. */
 export function Cta({
   href,
@@ -61,15 +76,20 @@ export function Cta({
   children,
   ...rest
 }: CtaProps &
-  Omit<React.ComponentProps<typeof Link>, "className"> & { href: string }) {
+  MotionSafe<Omit<React.ComponentProps<typeof Link>, "className">> & {
+    href: string;
+  }) {
   return (
-    <Link
+    <MotionLink
       href={href}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      transition={TAP_TRANSITION}
       className={cn(ctaVariants({ variant, size, block }), className)}
       {...rest}
     >
       {children}
-    </Link>
+    </MotionLink>
   );
 }
 
@@ -80,15 +100,20 @@ export function CtaButton({
   block,
   className,
   children,
+  type = "button",
   ...rest
-}: CtaProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+}: CtaProps & MotionSafe<React.ButtonHTMLAttributes<HTMLButtonElement>>) {
   return (
-    <button
+    <motion.button
+      type={type}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      transition={TAP_TRANSITION}
       className={cn(ctaVariants({ variant, size, block }), className)}
       {...rest}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 

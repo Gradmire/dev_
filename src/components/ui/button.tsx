@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
+import { motion } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
@@ -30,16 +33,38 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  // framer-motion redefines onAnimationStart/onAnimationEnd (they take an
+  // animation definition, not a DOM AnimationEvent), so the native handler
+  // types must be stripped before this props type reaches motion.button.
+  extends Omit<
+      React.ButtonHTMLAttributes<HTMLButtonElement>,
+      | "onAnimationStart"
+      | "onAnimationEnd"
+      | "onDrag"
+      | "onDragStart"
+      | "onDragEnd"
+    >,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+  ({ className, variant, size, asChild = false, type = "button", ...props }, ref) => {
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      );
+    }
     return (
-      <Comp
+      <motion.button
+        type={type}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}

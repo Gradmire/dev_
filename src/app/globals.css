@@ -91,6 +91,21 @@
        nearly invisible on navy, so they cannot be reused there. */
     --success-on-dark: 152 55% 70%;
     --warning-on-dark: 37 86% 69%;
+
+    /* Neutral ramp — same hue family as --ink (206°) so grays read as part
+       of the brand rather than a bolted-on gray-500. For disabled states,
+       skeleton fills and data/chart use, not page surfaces (those stay on
+       ink/paper/line above). */
+    --neutral-50: 206 25% 97%;
+    --neutral-100: 206 22% 94%;
+    --neutral-200: 206 18% 88%;
+    --neutral-300: 206 14% 78%;
+    --neutral-400: 206 12% 64%;
+    --neutral-500: 206 10% 50%;
+    --neutral-600: 206 12% 38%;
+    --neutral-700: 206 16% 28%;
+    --neutral-800: 206 22% 18%;
+    --neutral-900: 206 30% 11%;
   }
 
   .dark {
@@ -107,6 +122,17 @@
     --brand-green-dim: 160 30% 18%;
 
     --perf-bg: var(--paper);
+
+    --neutral-50: 206 30% 11%;
+    --neutral-100: 206 22% 18%;
+    --neutral-200: 206 16% 28%;
+    --neutral-300: 206 12% 38%;
+    --neutral-400: 206 10% 50%;
+    --neutral-500: 206 12% 64%;
+    --neutral-600: 206 14% 78%;
+    --neutral-700: 206 18% 88%;
+    --neutral-800: 206 22% 94%;
+    --neutral-900: 206 25% 97%;
 
     --background: var(--paper);
     --foreground: var(--ink);
@@ -140,10 +166,16 @@
     font-feature-settings: "cv02", "cv03", "cv04";
   }
 
-  h1, h2, h3, h4 {
-    @apply font-display tracking-tight;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold;
     text-wrap: balance;
   }
+  h1 { @apply text-h1; }
+  h2 { @apply text-h2; }
+  h3 { @apply text-h3; }
+  h4 { @apply text-h4; }
+  h5 { @apply text-h5; }
+  h6 { @apply text-h6; }
 
   /*
    * The prototype shipped with no focus styles at all. This is the floor:
@@ -235,6 +267,17 @@
       hsl(var(--sky)) 100%
     );
   }
+
+  /*
+   * Hero background texture — a soft two-point radial wash in the brand's
+   * own sky/navy hues, not a flat fill. CSS-only (no image request) so it
+   * can never delay or compete with the hero's LCP text.
+   */
+  .hero-texture {
+    background-image:
+      radial-gradient(ellipse 60% 50% at 85% 0%, hsl(var(--sky) / 0.12), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, hsl(var(--navy) / 0.08), transparent 65%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -249,27 +292,7 @@
 }
 
 /*
- * Entrance-animation starting state, for the components in
- * components/motion. Declared here rather than applied by the animation
- * because an effect cannot run before the first paint — hiding these in
- * JavaScript would show the finished layout and then blank it.
- *
- * Gated behind `.js`, added by the inline script in the root layout, so a
- * visitor without JavaScript is served the page unhidden rather than empty.
+ * Entrance-animation starting state now lives inline, set by framer-motion's
+ * `initial` prop on each `[data-motion]` element in components/motion — see
+ * the `<noscript>` fallback in the root layout for the no-JS case.
  */
-.js [data-reveal],
-.js [data-reveal-group] > * {
-  opacity: 0;
-}
-
-/*
- * The global block above neutralises transitions, but these elements are
- * hidden by a rule rather than moved by one, so reduced motion has to put
- * them back or the section never appears at all.
- */
-@media (prefers-reduced-motion: reduce) {
-  .js [data-reveal],
-  .js [data-reveal-group] > * {
-    opacity: 1;
-  }
-}

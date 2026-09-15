@@ -44,11 +44,11 @@ export async function generateMetadata({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-white p-5">
+    <div className="rounded-2xl border border-line bg-paper p-5 shadow-card">
       <span className="mb-2 block font-mono text-mini uppercase tracking-[0.07em] text-ink-soft">
         {label}
       </span>
-      <span className="font-display text-[22px] font-semibold">{value}</span>
+      <span className="font-display text-h4 font-semibold">{value}</span>
     </div>
   );
 }
@@ -91,10 +91,10 @@ export default async function CourseHubPage({
         <main id="main" className="gutter py-24">
           <div className="mx-auto max-w-[52ch] text-center">
             <span className="eyebrow justify-center">Guide in research</span>
-            <h1 className="mb-4 mt-3 text-[clamp(30px,4vw,44px)] font-semibold">
+            <h1 className="mb-4 mt-3 text-h2">
               {hub.name}
             </h1>
-            <p className="mb-8 text-[16px] text-ink-soft">
+            <p className="mb-8 text-lede text-ink-soft">
               {hub.oneLiner} We&rsquo;re still verifying rankings, fees and deadlines
               for this subject — we publish a hub only once the figures are sourced.
             </p>
@@ -118,7 +118,7 @@ export default async function CourseHubPage({
           aria-label="Breadcrumb"
           className="border-b border-dashed border-line gutter py-5"
         >
-          <ol className="mx-auto flex max-w-[1180px] items-center gap-2.5 font-mono text-xs uppercase tracking-[0.06em] text-ink-soft">
+          <ol className="mx-auto flex max-w-[1180px] items-center gap-2.5 font-mono text-meta uppercase tracking-[0.06em] text-ink-soft">
             <li><Link href="/" className="hover:text-ink">Gradmire</Link></li>
             <li aria-hidden="true">/</li>
             <li><Link href={`/${country}`} className="hover:text-ink">{hub.destination.stampLabel}</Link></li>
@@ -131,10 +131,10 @@ export default async function CourseHubPage({
           <Container className="mx-auto grid items-end gap-11 lg:grid-cols-[1.5fr_1fr]">
             <div>
               <span className="eyebrow">Course hub · {hub.code}</span>
-              <h1 className="my-4 text-[clamp(32px,4vw,50px)] font-semibold leading-[1.06]">
+              <h1 className="my-4 text-h2">
                 {hub.name} in the {hub.destination.name}
               </h1>
-              <p className="max-w-[56ch] text-[16px] text-ink-soft">{hub.oneLiner}</p>
+              <p className="max-w-[56ch] text-lede text-ink-soft">{hub.oneLiner}</p>
             </div>
 
             <dl className="rounded-2xl bg-ink p-6 font-mono text-white">
@@ -162,7 +162,7 @@ export default async function CourseHubPage({
         {hub.overview && (
           <section className="gutter pb-4">
             <Container>
-              <p className="max-w-[68ch] text-[16px] leading-relaxed text-ink-soft">
+              <p className="max-w-[68ch] text-lede leading-relaxed text-ink-soft">
                 {hub.overview}
               </p>
             </Container>
@@ -174,10 +174,10 @@ export default async function CourseHubPage({
           <section className="gutter py-11">
             <Container>
               <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-                <h2 className="text-[26px] font-semibold">
+                <h2 className="text-h3">
                   Top universities for {hub.name.split(" ")[0]}
                 </h2>
-                <span className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+                <span className="font-mono text-meta uppercase tracking-wide text-ink-soft">
                   Subject-ranked, not overall rank
                 </span>
               </div>
@@ -188,7 +188,7 @@ export default async function CourseHubPage({
                 aria-label={`Top universities for ${hub.name}`}
                 className="scroll-x-hint overflow-x-auto rounded-2xl border border-line"
               >
-                <table className="w-full min-w-[560px] border-collapse text-sm">
+                <table className="w-full min-w-[560px] border-collapse text-ui">
                   <thead>
                     <tr>
                       {["University", "Notable for", "Subject rank (UK)"].map((h) => (
@@ -235,7 +235,7 @@ export default async function CourseHubPage({
         {/* Fees & entry */}
         <section className="gutter py-11">
           <Container>
-            <h2 className="mb-6 text-[26px] font-semibold">Fees &amp; entry requirements</h2>
+            <h2 className="mb-6 text-h3">Fees &amp; entry requirements</h2>
             <div className="grid gap-10 lg:grid-cols-2">
               <div className="grid gap-4 sm:grid-cols-2">
                 {tuition && <Stat label="Tuition" value={tuition} />}
@@ -246,7 +246,7 @@ export default async function CourseHubPage({
                   {hub.entryRequirements.map((req) => (
                     <li
                       key={req}
-                      className="border-b border-line py-3 text-[14.5px] text-ink"
+                      className="border-b border-line py-3 text-ui text-ink"
                     >
                       {req}
                     </li>
@@ -282,14 +282,14 @@ export default async function CourseHubPage({
         <section className="gutter py-11">
           <Container>
             <div className="rounded-3xl bg-ink p-9 text-white">
-              <h2 className="text-[26px] font-semibold text-white">Career outcomes</h2>
+              <h2 className="text-h3 text-white">Career outcomes</h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {salary && (
                   <div className="rounded-2xl border border-white/15 bg-white/5 p-5">
                     <span className="mb-2 block font-mono text-mini uppercase tracking-[0.07em] text-white/60">
                       Starting salary
                     </span>
-                    <span className="font-display text-[22px] font-semibold">{salary}</span>
+                    <span className="font-display text-h4 font-semibold">{salary}</span>
                   </div>
                 )}
                 {hub.topSectors && hub.topSectors.length > 0 && (
@@ -297,7 +297,7 @@ export default async function CourseHubPage({
                     <span className="mb-2 block font-mono text-mini uppercase tracking-[0.07em] text-white/60">
                       Top hiring sectors
                     </span>
-                    <span className="font-display text-[16px]">
+                    <span className="font-display text-lede">
                       {hub.topSectors.join(" · ")}
                     </span>
                   </div>
@@ -337,7 +337,7 @@ export default async function CourseHubPage({
         <section className="gutter pb-20 pt-4">
           <Container>
             <div className="rounded-3xl bg-brandgreen p-10 text-center text-white">
-              <h2 className="mb-2.5 text-[28px] font-semibold text-white">
+              <h2 className="mb-2.5 text-h2 text-white">
                 Get a shortlist for {hub.name}
               </h2>
               <p className="mx-auto mb-6 max-w-[46ch] text-lede text-white/85">

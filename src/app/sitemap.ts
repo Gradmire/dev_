@@ -9,6 +9,8 @@ const STATIC_PATHS = [
   "",
   ...COMPANY_LINKS.map((l) => l.href),
   ...TOOLS.map((t) => t.href),
+  "/privacy",
+  "/terms",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

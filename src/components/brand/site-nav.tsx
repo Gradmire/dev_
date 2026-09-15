@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Menu,
   X,
@@ -161,7 +162,7 @@ export function SiteNav({
           <Logo className="h-[23px] sm:h-[26px]" />
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-[6px] lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1.5 lg:flex">
           <NavMenu
             label="Destinations"
             fallbackHref={destinationsHref}
@@ -301,31 +302,43 @@ export function SiteNav({
             aria-label={open ? "Close menu" : "Open menu"}
             className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink transition-colors hover:bg-paper-dim lg:hidden"
           >
-            {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={open ? "close" : "open"}
+                initial={{ opacity: 0, rotate: -45 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 45 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="flex"
+              >
+                {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+              </motion.span>
+            </AnimatePresence>
           </button>
         </div>
       </Container>
 
       {/*
-        A grid whose single row animates between 0fr and 1fr. That transitions
-        the panel open without animating `height`, which would reflow the page
-        on every frame, and without `hidden`, which snapped it open instantly.
+        Animating `height` between 0 and "auto" — framer-motion measures the
+        content and tweens to it, so the panel doesn't jump the way a plain
+        CSS `height: auto` would, and doesn't reflow the page on every frame
+        the way animating a fixed pixel height guessed in advance would.
       */}
-      <div
+      <motion.div
         id="mobile-nav"
+        initial={false}
+        animate={{ height: open ? "auto" : 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
         className={cn(
-          "grid overflow-hidden border-line bg-paper transition-[grid-template-rows] duration-200 ease-out lg:hidden",
-          open ? "grid-rows-[1fr] border-t" : "grid-rows-[0fr]",
+          "overflow-hidden border-line bg-paper lg:hidden",
+          open && "border-t",
         )}
       >
         {/*
-          A collapsed grid row still contains focusable links, so `inert`
-          takes them out of the tab order and the a11y tree — the job the
-          `hidden` attribute used to do.
-
-          The padding goes with it. A `0fr` track still reserves its min-content
-          height and padding counts toward that, which left a 32px strip of the
-          closed menu bleeding under the header on every page.
+          The panel stays mounted (just measured to zero height) so `inert`
+          can take its links out of the tab order and the a11y tree — the job
+          the `hidden` attribute used to do — without the header/footer
+          shifting or the toggle button's `aria-controls` pointing at nothing.
         */}
         <nav
           aria-label="Mobile"
@@ -438,7 +451,7 @@ export function SiteNav({
             {signedIn ? "My applications" : "Sign in"}
           </Link>
         </nav>
-      </div>
+      </motion.div>
     </header>
   );
 }
@@ -472,17 +485,17 @@ function MobileSection({
           )}
         />
       </button>
-      {/* Same 0fr/1fr reveal as the panel above, for the same reasons. */}
-      <div
-        className={cn(
-          "grid overflow-hidden transition-[grid-template-rows] duration-200 ease-out",
-          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-        )}
+      {/* Same auto-height reveal as the panel above, for the same reasons. */}
+      <motion.div
+        initial={false}
+        animate={{ height: expanded ? "auto" : 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="overflow-hidden"
       >
         <div inert={!expanded} className="min-h-0 pb-3 pl-1">
           {children}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

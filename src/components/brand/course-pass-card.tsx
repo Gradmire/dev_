@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ImageWithSkeleton } from "@/components/ui/image-with-skeleton";
+
+const MotionLink = motion(Link);
 
 /**
  * A course hub as a boarding pass, perforation and all.
@@ -27,6 +33,17 @@ export function CoursePassCard({
 }) {
   const inner = (
     <>
+      {/* .png suffix on the color segment: placehold.co serves SVG by
+          default, which next/image's optimizer rejects (400) unless SVGs
+          are explicitly allowed. PNG avoids that config trade-off. */}
+      <ImageWithSkeleton
+        src={`https://placehold.co/640x400/11446A/e8eef3.png?text=${encodeURIComponent(code)}&font=roboto`}
+        alt={`${name} course photo — placeholder, replace with real programme or campus photography`}
+        width={640}
+        height={400}
+        wrapperClassName="aspect-[16/10] w-full"
+      />
+
       <div className="p-5 pb-4">
         <span
           className={cn(
@@ -36,10 +53,8 @@ export function CoursePassCard({
         >
           {code}
         </span>
-        <h3 className="mb-2.5 min-h-[46px] text-[19px] font-semibold leading-tight">
-          {name}
-        </h3>
-        <p className="min-h-[64px] text-[13px] text-ink-soft">{description}</p>
+        <h3 className="mb-2.5 min-h-[46px] text-h5 font-semibold">{name}</h3>
+        <p className="min-h-[64px] text-small text-ink-soft">{description}</p>
       </div>
 
       <div className="perforation" aria-hidden="true" />
@@ -77,15 +92,14 @@ export function CoursePassCard({
   }
 
   return (
-    <Link
+    <MotionLink
       href={href}
-      className={cn(
-        shell,
-        // Both properties, or the shadow snaps while the lift eases.
-        "transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl",
-      )}
+      whileHover={{ y: -4, scale: 1.015 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={cn(shell, "transition-shadow duration-200 ease-out hover:shadow-2xl")}
     >
       {inner}
-    </Link>
+    </MotionLink>
   );
 }

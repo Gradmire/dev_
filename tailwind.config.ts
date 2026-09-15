@@ -83,19 +83,41 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        /*
+         * Neutral gray ramp, additive to the ink/paper/line brand tokens
+         * above. Those three cover the site's actual surfaces; this ramp
+         * exists for the in-between cases (disabled states, muted icons,
+         * chart/data fills) that don't map cleanly onto "ink" or "paper".
+         */
+        neutral: {
+          50: "hsl(var(--neutral-50))",
+          100: "hsl(var(--neutral-100))",
+          200: "hsl(var(--neutral-200))",
+          300: "hsl(var(--neutral-300))",
+          400: "hsl(var(--neutral-400))",
+          500: "hsl(var(--neutral-500))",
+          600: "hsl(var(--neutral-600))",
+          700: "hsl(var(--neutral-700))",
+          800: "hsl(var(--neutral-800))",
+          900: "hsl(var(--neutral-900))",
+        },
+      },
+      fontFamily: {
+        display: ["var(--font-fraunces)", "Georgia", "serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["var(--font-plex-mono)", "ui-monospace", "monospace"],
       },
       /*
-       * The de-facto type scale, promoted from arbitrary values. These sizes
-       * were already in use — text-[13.5px] alone appeared 35 times — but
-       * were declared nowhere, so every new component re-guessed them.
+       * micro/mini/meta/body/ui/lede: the de-facto small-text scale,
+       * promoted from arbitrary values already in use across the app
+       * (text-[13.5px] alone appeared 35 times). Deliberately named
+       * outside Tailwind's own scale — redefining `sm`/`base` would
+       * silently restyle every shadcn primitive that uses `text-sm`.
        *
-       * Deliberately named outside Tailwind's own scale. Redefining `sm` or
-       * `base` here would silently restyle every shadcn primitive that uses
-       * `text-sm` (button, badge, table, ...), so the defaults are left alone
-       * and these sit beside them.
-       *
-       * Size only, no paired line-height: `text-[13.5px]` never set one, so
-       * adding one here would silently reflow every line these replace.
+       * h1-h6/small: the heading scale, additive to the above. Each maps
+       * to the clamp()/px value already hand-written on that heading level
+       * across page.tsx, [country]/page.tsx and [slug]/page.tsx, so
+       * adopting these is a rename, not a redesign.
        */
       fontSize: {
         micro: "10px",
@@ -104,11 +126,22 @@ const config = {
         body: "13.5px",
         ui: "14px",
         lede: "15px",
-      },
-      fontFamily: {
-        display: ["var(--font-poppins)", "system-ui", "sans-serif"],
-        sans: ["var(--font-poppins)", "system-ui", "sans-serif"],
-        mono: ["var(--font-poppins)", "system-ui", "sans-serif"],
+        h6: ["17px", { lineHeight: "1.3", letterSpacing: "-0.005em" }],
+        h5: ["19px", { lineHeight: "1.25", letterSpacing: "-0.005em" }],
+        h4: ["22px", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
+        h3: [
+          "clamp(26px, 3vw, 36px)",
+          { lineHeight: "1.15", letterSpacing: "-0.01em" },
+        ],
+        h2: [
+          "clamp(30px, 4vw, 44px)",
+          { lineHeight: "1.08", letterSpacing: "-0.01em" },
+        ],
+        h1: [
+          "clamp(34px, 4.6vw, 58px)",
+          { lineHeight: "1.05", letterSpacing: "-0.01em" },
+        ],
+        small: ["13px", { lineHeight: "1.5", letterSpacing: "0" }],
       },
       boxShadow: {
         card: "0 1px 0 rgb(16 20 46 / 0.05), 0 12px 24px -16px rgb(16 20 46 / 0.25)",

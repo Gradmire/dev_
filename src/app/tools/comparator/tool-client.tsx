@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   GitCompare,
   Plus,
@@ -12,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Container } from "@/components/ui/container";
 import {
   Table,
   TableBody,
@@ -24,6 +27,17 @@ import { getCountry } from "@/data/countries";
 import type { CourseHub } from "@/data/courses";
 
 const MAX_COMPARE = 3;
+
+const MotionTableHead = motion(TableHead);
+const MotionTableCell = motion(TableCell);
+
+const COLUMN_MOTION = {
+  layout: true,
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.2, ease: "easeOut" },
+} as const;
 
 export default function ComparatorPage({ hubs }: { hubs: CourseHub[] }) {
   const allHubs = hubs;
@@ -88,114 +102,113 @@ export default function ComparatorPage({ hubs }: { hubs: CourseHub[] }) {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl gutter py-16">
-      <div className="text-center mb-10">
-        <Badge variant="outline" className="mb-4">
-          <GitCompare className="mr-1.5 h-3.5 w-3.5" />
-          Course Comparator
-        </Badge>
-        <h1 className="text-3xl font-bold">Compare Courses Side by Side</h1>
-        <p className="mt-2 text-muted-foreground">
-          Select up to {MAX_COMPARE} courses to compare tuition, salary, and
-          more.
-        </p>
-      </div>
+    <div className="gutter py-16">
+      <Container className="max-w-5xl">
+        <div className="text-center mb-10">
+          <Badge variant="outline" className="mb-4">
+            <GitCompare className="mr-1.5 h-3.5 w-3.5" />
+            Course Comparator
+          </Badge>
+          <h1 className="text-h2">Compare Courses Side by Side</h1>
+          <p className="mt-2 text-muted-foreground">
+            Select up to {MAX_COMPARE} courses to compare tuition, salary, and
+            more.
+          </p>
+        </div>
 
-      {/* Picker */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <Label className="text-sm font-medium">
-            Select courses to compare ({selected.length}/{MAX_COMPARE})
-          </Label>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {allHubs.map((hub) => {
-              const isSelected = selected.includes(hub.slug);
-              return (
-                <Button
-                  key={hub.slug}
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() =>
-                    isSelected ? removeCourse(hub.slug) : addCourse(hub.slug)
-                  }
-                  disabled={!isSelected && selected.length >= MAX_COMPARE}
-                  className="gap-1.5"
-                >
-                  {isSelected ? (
-                    <X className="h-3 w-3" />
-                  ) : (
-                    <Plus className="h-3 w-3" />
-                  )}
-                  {hub.name}
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Comparison Table */}
-      {selectedCourses.length > 0 ? (
-        <Card>
-          {/* tabIndex: the only way to scroll this region by keyboard. */}
-          <div
-            tabIndex={0}
-            role="region"
-            aria-label="Course comparison"
-            className="scroll-x-hint overflow-x-auto"
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-48 font-semibold">Feature</TableHead>
-                  {selectedCourses.map((c) => (
-                    <TableHead key={c.slug} className="min-w-[200px]">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold">{c.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeCourse(c.slug)}
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {comparisonRows.map((row) => (
-                  <TableRow key={row.label}>
-                    <TableCell className="font-medium text-muted-foreground">
-                      {row.label}
-                    </TableCell>
-                    {selectedCourses.map((c) => (
-                      <TableCell key={c.slug}>
-                        {row.render(c)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <GitCompare className="mx-auto h-12 w-12 text-muted-foreground/30" />
-            <h3 className="mt-4 text-lg font-semibold text-muted-foreground">
-              Select courses to compare
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Pick up to {MAX_COMPARE} course areas above to see them
-              side by side.
-            </p>
+        {/* Picker */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <Label className="text-sm font-medium">
+              Select courses to compare ({selected.length}/{MAX_COMPARE})
+            </Label>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {allHubs.map((hub) => {
+                const isSelected = selected.includes(hub.slug);
+                return (
+                  <Button
+                    key={hub.slug}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      isSelected ? removeCourse(hub.slug) : addCourse(hub.slug)
+                    }
+                    disabled={!isSelected && selected.length >= MAX_COMPARE}
+                    className="gap-1.5"
+                  >
+                    {isSelected ? (
+                      <X className="h-3 w-3" />
+                    ) : (
+                      <Plus className="h-3 w-3" />
+                    )}
+                    {hub.name}
+                  </Button>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        {/* Comparison Table */}
+        {selectedCourses.length > 0 ? (
+          <Card>
+            {/* tabIndex: the only way to scroll this region by keyboard. */}
+            <div
+              tabIndex={0}
+              role="region"
+              aria-label="Course comparison"
+              className="scroll-x-hint overflow-x-auto"
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-48 font-semibold">Feature</TableHead>
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      {selectedCourses.map((c) => (
+                        <MotionTableHead key={c.slug} className="min-w-[200px]" {...COLUMN_MOTION}>
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold">{c.name}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeCourse(c.slug)}
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </MotionTableHead>
+                      ))}
+                    </AnimatePresence>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {comparisonRows.map((row) => (
+                    <TableRow key={row.label}>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {row.label}
+                      </TableCell>
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        {selectedCourses.map((c) => (
+                          <MotionTableCell key={c.slug} {...COLUMN_MOTION}>
+                            {row.render(c)}
+                          </MotionTableCell>
+                        ))}
+                      </AnimatePresence>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        ) : (
+          <EmptyState
+            icon={GitCompare}
+            title="Select courses to compare"
+            description={`Pick up to ${MAX_COMPARE} course areas above to see them side by side.`}
+          />
+        )}
+      </Container>
     </div>
   );
 }

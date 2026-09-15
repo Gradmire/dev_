@@ -1,17 +1,37 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/config/site";
+import { PageTransition } from "@/components/motion/page-transition";
+import { cn } from "@/lib/utils";
 
 /**
- * One typeface, Poppins, across the whole site. All three roles (display,
- * body, mono) point at the same font family so `font-display`/`font-sans`/
- * `font-mono` keep working everywhere without touching every call site.
+ * Three-typeface pairing: Fraunces for headings (the serif carries the
+ * "boarding pass"/editorial feel the brand components already imply),
+ * Inter for body copy, IBM Plex Mono for the eyebrow labels, board/pass
+ * data cells and codes that `font-mono` is used for throughout the brand
+ * components. `font-display`/`font-sans`/`font-mono` in tailwind.config.ts
+ * point at these three variables.
  */
-const poppins = Poppins({
+const fraunces = Fraunces({
   subsets: ["latin"],
-  variable: "--font-poppins",
+  variable: "--font-fraunces",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-plex-mono",
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -54,26 +74,28 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={poppins.variable}>
+    <html
+      lang="en"
+      className={cn(fraunces.variable, inter.variable, plexMono.variable)}
+    >
       <body className="min-h-screen font-sans">
         {/*
-          Marks the document as scripted before the rest of the body parses,
-          which is what lets globals.css hide the entrance-animated sections
-          without blanking the page for a visitor whose JavaScript never runs.
-          Inline and first, or the sections flash at full opacity.
+          framer-motion's `initial`/`whileInView` render as an inline
+          `opacity: 0` style straight into the server HTML, so any element
+          carrying `data-motion` would stay invisible forever for a visitor
+          whose JavaScript never runs. `<noscript>` content only applies when
+          scripting is off, so this stylesheet only ever overrides that case.
         */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: 'document.documentElement.classList.add("js")',
-          }}
-        />
+        <noscript>
+          <style>{"[data-motion]{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-pill focus:bg-ink focus:px-5 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-paper"
         >
           Skip to content
         </a>
-        {children}
+        <PageTransition>{children}</PageTransition>
       </body>
     </html>
   );

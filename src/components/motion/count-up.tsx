@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { animate, onScroll } from "animejs";
+import { animate, useInView, useReducedMotion } from "framer-motion";
 
 /**
  * Counts a stat's leading figure up from zero when it scrolls into view.
@@ -17,49 +17,56 @@ import { animate, onScroll } from "animejs";
 
 const LEADING_FIGURE = /^(\d+)(.*)$/;
 
-const DURATION = 1100;
-const EASE = "out(4)";
-// "<container edge> <target edge>" — see reveal.tsx.
-const ENTER = "end-=72 start";
+const DURATION = 1.1;
+const EASE = "easeOut";
+// Same threshold as reveal.tsx's VIEWPORT.
+const MARGIN = "0px 0px -72px 0px";
 
 // Client components still render on the server, where `useLayoutEffect` warns.
 const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function CountUp({ value }: { value: string }) {
   const figureRef = useRef<HTMLSpanElement>(null);
+  const inView = useInView(figureRef, { once: true, margin: MARGIN });
+  const shouldReduceMotion = useReducedMotion();
 
   useBeforePaint(() => {
     const el = figureRef.current;
     if (!el) return;
+    if (!LEADING_FIGURE.test(value)) return;
+    el.textContent = "0";
+  }, [value]);
+
+  useEffect(() => {
+    const el = figureRef.current;
+    if (!el || !inView) return;
 
     const match = LEADING_FIGURE.exec(value);
     if (!match) return;
     const [, figure] = match;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (shouldReduceMotion) {
+      el.textContent = figure;
+      return;
+    }
 
-    el.textContent = "0";
-
-    const counter = { n: 0 };
-    const animation = animate(counter, {
-      n: Number(figure),
+    const controls = animate(0, Number(figure), {
       duration: DURATION,
       ease: EASE,
-      onUpdate: () => {
-        el.textContent = String(Math.round(counter.n));
+      onUpdate: (latest) => {
+        el.textContent = String(Math.round(latest));
       },
       // Rounding during the tween can leave the last frame a digit short.
       onComplete: () => {
         el.textContent = figure;
       },
-      autoplay: onScroll({ target: el, enter: ENTER, repeat: false }),
     });
 
     return () => {
-      animation.revert();
+      controls.stop();
       el.textContent = figure;
     };
-  }, [value]);
+  }, [inView, value, shouldReduceMotion]);
 
   const match = LEADING_FIGURE.exec(value);
   if (!match) return <>{value}</>;
