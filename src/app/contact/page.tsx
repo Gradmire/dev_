@@ -6,13 +6,14 @@ import { getCourseHubs } from "@/lib/queries";
 import { optionalContent } from "@/lib/safe-query";
 import { PRIMARY_DESTINATION } from "@/config/site";
 import { Container } from "@/components/ui/container";
+import { routeMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
+  path: "/contact",
   title: "Book a free consultation",
   description:
     "Book a free 20-minute consultation with a Gradmire counselor who specializes in your subject area.",
-  alternates: { canonical: "/contact" },
-};
+});
 
 // Next requires route segment config to be a literal it can statically
 // extract, so this cannot reference CONTENT_REVALIDATE_SECONDS directly.

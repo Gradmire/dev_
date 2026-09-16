@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/accordion";
 import { faqData } from "@/data/faq";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
+  path: "/faq",
   title: "FAQ",
   description:
     "Frequently asked questions about studying abroad, course selection, visa requirements, and fees.",
-};
+});
 
 function FAQPageContent() {
   return (

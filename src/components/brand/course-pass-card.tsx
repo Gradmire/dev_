@@ -33,14 +33,15 @@ export function CoursePassCard({
 }) {
   const inner = (
     <>
-      {/* .png suffix on the color segment: placehold.co serves SVG by
-          default, which next/image's optimizer rejects (400) unless SVGs
-          are explicitly allowed. PNG avoids that config trade-off. */}
+      {/* TODO(real photography): each course hub needs its own real
+          programme/campus photo here — this local SVG is a stand-in so the
+          card no longer depends on a third-party image host. */}
       <ImageWithSkeleton
-        src={`https://placehold.co/640x400/11446A/e8eef3.png?text=${encodeURIComponent(code)}&font=roboto`}
+        src="/placeholders/course-card.svg"
         alt={`${name} course photo — placeholder, replace with real programme or campus photography`}
         width={640}
         height={400}
+        unoptimized
         wrapperClassName="aspect-[16/10] w-full"
       />
 

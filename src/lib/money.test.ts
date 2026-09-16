@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { currencySymbol, formatMoney, formatMoneyRange, rangeMidpoint } from "./money";
+import {
+  currencySymbol,
+  formatINRCompact,
+  formatMoney,
+  formatMoneyRange,
+  rangeMidpoint,
+} from "./money";
 
 /**
  * Every figure is stored as an integer plus the owning hub's `currency`, so
@@ -54,6 +60,20 @@ describe("formatMoneyRange", () => {
   it("returns null for no data, so callers can tell it from a zero", () => {
     expect(formatMoneyRange({ min: null, max: null, currency: "GBP" })).toBeNull();
     expect(formatMoneyRange({ min: 0, max: null, currency: "GBP" })).toBe("£0");
+  });
+});
+
+describe("formatINRCompact", () => {
+  it("switches to lakhs at 1,00,000 and crores at 1,00,00,000", () => {
+    expect(formatINRCompact(45_000)).toBe("₹45,000");
+    expect(formatINRCompact(5_634_111)).toBe("₹56.3L");
+    expect(formatINRCompact(100_000)).toBe("₹1L");
+    expect(formatINRCompact(125_000_000)).toBe("₹12.5Cr");
+  });
+
+  it("keeps the sign on a negative net position rather than folding it into the number", () => {
+    expect(formatINRCompact(-2_310_000)).toBe("-₹23.1L");
+    expect(formatINRCompact(-45_000)).toBe("-₹45,000");
   });
 });
 

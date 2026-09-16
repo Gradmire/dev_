@@ -11,12 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
+  path: "/about",
   title: "About",
   description:
     "We built Gradmire because country-first advice wasn't working. Learn about our course-first approach to study abroad.",
-};
+});
 
 function AboutPageContent() {
   return (
@@ -39,12 +41,14 @@ function AboutPageContent() {
           find the best university and destination around it.
         </p>
         <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-          Right now, Gradmire fully covers the{" "}
-          <strong>United Kingdom</strong> — with detailed course guides,
-          university data, visa guidance, and interactive planning tools. We&apos;re
-          actively building out the US, Canada, and Australia, and you can join
-          the waitlist for any of those destinations to be notified when they
-          launch.
+          Right now, Gradmire has live course guides for 3 of the 8 UK
+          subjects we&apos;re building — <strong>Business &amp; Management</strong>,{" "}
+          <strong>Computer Science, AI &amp; Data Science</strong>, and{" "}
+          <strong>Engineering &amp; Technology</strong> — each with fees, entry
+          requirements, deadlines, and graduate salary data. The rest of the UK
+          subject list, plus the US, Canada, and Australia, are actively in
+          progress; you can join the waitlist for any destination to be
+          notified when it launches.
         </p>
       </div>
 
@@ -88,76 +92,72 @@ function AboutPageContent() {
 
       <Separator className="mb-16" />
 
-      {/* Team */}
+      {/* Who's behind this */}
       <section id="team" className="mb-16">
-        <h2 className="text-2xl font-bold text-center mb-10">Our team</h2>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {[
-            {
-              name: "Sarah Chen",
-              role: "Lead Counselor — Business & Finance",
-              desc: "5 years in MBA admissions. Former applicant to LBS and Cambridge Judge.",
-            },
-            {
-              name: "James Okafor",
-              role: "Lead Counselor — STEM & Engineering",
-              desc: "PhD graduate from Imperial. Specializes in ATAS guidance and CS/Engineering applications.",
-            },
-            {
-              name: "Ananya Sharma",
-              role: "Lead Counselor — Humanities & Social Sciences",
-              desc: "Oxford PPE graduate. Expert in Law, Economics, and Psychology admissions.",
-            },
-          ].map((person, i) => (
-            <Card key={i}>
-              <CardContent className="p-6 text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-                  <Users className="h-8 w-8 text-primary/50" />
-                </div>
-                <h3 className="mt-4 font-semibold">{person.name}</h3>
-                <p className="text-sm text-primary font-medium">{person.role}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {person.desc}
-                </p>
-                <p className="mt-2 text-micro uppercase tracking-wider text-muted-foreground/50">
-                  Placeholder profile
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <h2 className="text-2xl font-bold text-center mb-10">Who&apos;s behind Gradmire</h2>
+        <Card className="mx-auto max-w-xl">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <Users className="h-8 w-8 text-primary/50" />
+            </div>
+            {/*
+             * TODO(founder bio): Gradmire is a solo-founder project right
+             * now — this needs a first-person bio for the one named person
+             * behind it, not an institutional "we" or a team grid. At
+             * minimum, supply:
+             *   - Name and (optional) photo
+             *   - Relevant background — why you're the person building this
+             *   - A plain, first-person statement that Gradmire is new and
+             *     hasn't placed any students yet. That's a stronger claim
+             *     than a vague "our team" line, and matches the "we'd
+             *     rather be honest than polished" value above — don't
+             *     soften it into institutional voice.
+             * Leaving the name/copy below as placeholders on purpose:
+             * fill in the real ones rather than generating plausible text.
+             */}
+            <h3 className="mt-4 font-semibold">[Founder name — TODO]</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              TODO: first-person founder bio. See the comment in this file
+              (src/app/about/page.tsx) for what it needs to cover.
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
-      <Separator className="mb-16" />
-
-      {/* Trust Markers */}
-      <section>
-        <h2 className="text-2xl font-bold text-center mb-10">
-          Trust markers
-        </h2>
-        <div className="grid gap-6 sm:grid-cols-4">
-          {[
-            { label: "Students Helped", value: "—" },
-            { label: "University Partners", value: "—" },
-            { label: "Countries Covered", value: "1 (UK)" },
-            { label: "Success Rate", value: "—" },
-          ].map((marker, i) => (
-            <Card key={i}>
-              <CardContent className="p-5 text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {marker.value}
-                </div>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  {marker.label}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          Trust markers are placeholders — update with real numbers before launch.
-        </p>
-      </section>
+      {/*
+       * Trust markers, removed rather than shown with placeholder values.
+       * Three of the four numbers had nothing real behind them ("—" for
+       * students helped, university partners, success rate) — an empty
+       * stat grid reads worse than no stat grid at all. Restore this once
+       * there are real figures for at least most of these, with a
+       * `SourcedStat` (see Phase 4) for each rather than a bare number.
+       *
+       * <Separator className="mb-16" />
+       * <section>
+       *   <h2 className="text-2xl font-bold text-center mb-10">
+       *     Trust markers
+       *   </h2>
+       *   <div className="grid gap-6 sm:grid-cols-4">
+       *     {[
+       *       { label: "Students Helped", value: "—" },
+       *       { label: "University Partners", value: "—" },
+       *       { label: "Countries Covered", value: "1 (UK)" },
+       *       { label: "Success Rate", value: "—" },
+       *     ].map((marker, i) => (
+       *       <Card key={i}>
+       *         <CardContent className="p-5 text-center">
+       *           <div className="text-2xl font-bold text-primary">
+       *             {marker.value}
+       *           </div>
+       *           <div className="mt-1 text-sm text-muted-foreground">
+       *             {marker.label}
+       *           </div>
+       *         </CardContent>
+       *       </Card>
+       *     ))}
+       *   </div>
+       * </section>
+       */}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowRight, SearchX } from "lucide-react";
@@ -11,14 +10,18 @@ import { isDatabaseConfigured } from "@/db";
 import { PRIMARY_DESTINATION } from "@/config/site";
 import { Container } from "@/components/ui/container";
 import { Cta } from "@/components/ui/cta";
-import { CourseCardSkeleton } from "@/components/ui/course-card-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { routeMetadata } from "@/lib/metadata";
 
 type CourseHub = Awaited<ReturnType<typeof getCourseHubs>>[number];
 
 /**
- * Own Suspense boundary so a slow hub read streams in under the header
- * instead of blocking the whole route (same pattern as the homepage).
+ * Awaited directly in the page body rather than streamed behind a Suspense
+ * boundary — React's Suspense-boundary swap relies on an inline script tag
+ * to replace the fallback once the promise resolves, so with JavaScript
+ * disabled the "Loading course hubs…" fallback would be the only thing that
+ * ever renders. Awaiting here means the resolved grid is what ships in the
+ * initial HTML.
  */
 async function CourseHubsSection({
   country,
@@ -71,26 +74,6 @@ async function CourseHubsSection({
   );
 }
 
-function CourseHubsSectionSkeleton() {
-  return (
-    <section className="bg-ink gutter py-20 text-paper [--perf-bg:var(--ink)]">
-      <Container>
-        <div className="mb-10">
-          <span className="eyebrow !text-sky before:!bg-sky">Browse by course</span>
-          <h2 className="mt-2.5 text-h3 text-white">
-            Loading course hubs…
-          </h2>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <CourseCardSkeleton key={i} />
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
-
 // Next requires route segment config to be a literal it can statically
 // extract, so this cannot reference CONTENT_REVALIDATE_SECONDS directly.
 // Keep it equal to that constant in @/config/site.
@@ -112,16 +95,16 @@ export async function generateMetadata({
   if (!destination) return {};
 
   const live = destination.status === "live";
-  return {
+  return routeMetadata({
+    path: `/${destination.slug}`,
     title: live
       ? `Study in the ${destination.name} — courses by subject`
       : `${destination.name} — coming soon`,
     description: live
       ? `Compare ${destination.name} master's courses by subject: fees, entry requirements, deadlines and graduate salaries.`
       : `Gradmire is building course-first guides for the ${destination.name}. The UK is live now.`,
-    alternates: { canonical: `/${destination.slug}` },
-    robots: live ? undefined : { index: false, follow: true },
-  };
+    noIndex: !live,
+  });
 }
 
 export default async function DestinationPage({
@@ -181,8 +164,6 @@ export default async function DestinationPage({
     );
   }
 
-  // Not awaited: streamed into its own Suspense boundary below so a slow
-  // read shows a skeleton instead of blocking the whole route.
   const hubsPromise = optionalContent(
     `${country} course hubs`,
     () => getCourseHubs(country),
@@ -207,9 +188,7 @@ export default async function DestinationPage({
           </Container>
         </section>
 
-        <Suspense fallback={<CourseHubsSectionSkeleton />}>
-          <CourseHubsSection country={country} hubsPromise={hubsPromise} />
-        </Suspense>
+        <CourseHubsSection country={country} hubsPromise={hubsPromise} />
       </main>
       <SiteFooter />
     </>

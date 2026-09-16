@@ -43,14 +43,6 @@ export const metadata: Metadata = {
   },
   description:
     "Study abroad organized by subject, not by country. Compare UK master's courses on fees, entry requirements, deadlines and graduate salaries — then get a shortlist built around your subject.",
-  keywords: [
-    "study abroad",
-    "UK masters",
-    "MSc UK fees",
-    "Graduate Route visa",
-    "UK university rankings by subject",
-    "study in the UK from India",
-  ],
   openGraph: {
     type: "website",
     siteName: "Gradmire",

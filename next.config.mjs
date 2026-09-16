@@ -8,16 +8,6 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   poweredByHeader: false,
   compress: true,
-  // Placeholder imagery until real photography is supplied — see the
-  // design-system pass. placehold.co covers course-card thumbnails,
-  // images.unsplash.com (pinned photo IDs, not the random-source endpoint)
-  // covers campus/hero imagery.
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "placehold.co" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-    ],
-  },
   // `postgres` is a Node driver with no business being webpack-bundled into
   // every server function; externalising it cuts cold-start parse time.
   serverExternalPackages: ["postgres"],

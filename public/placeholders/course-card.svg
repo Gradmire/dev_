@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" role="img" aria-label="Placeholder course image">
+  <rect width="640" height="400" fill="#11446A" />
+  <path d="M0 400 L220 0 H340 L120 400 Z" fill="#0E3A5C" />
+  <path d="M640 0 L460 400 H360 L540 0 Z" fill="#155578" />
+  <g stroke="#7DD3FC" stroke-width="2.5" opacity="0.55">
+    <path d="M320 150 L260 180 L320 210 L380 180 Z" fill="none" />
+    <path d="M280 195 V235 Q320 250 360 235 V195" fill="none" />
+    <line x1="380" y1="180" x2="380" y2="220" />
+  </g>
+</svg>

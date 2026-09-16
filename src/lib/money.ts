@@ -77,6 +77,27 @@ export function formatMoneyRange(
   return `${fmt((min ?? max)!)}${suffix}`;
 }
 
+/**
+ * Compact INR formatting in lakhs/crores rather than the "k" thousands
+ * `formatMoney({ compact: true })` uses — "₹56.3L" is how the audience this
+ * site is built for reads a six-figure rupee amount; "₹5634.1k" is not.
+ * Handles negative amounts (a net position can go negative) with a leading
+ * sign rather than folding it into the number.
+ */
+export function formatINRCompact(amount: number): string {
+  const sign = amount < 0 ? "-" : "";
+  const abs = Math.abs(amount);
+  if (abs >= 1_00_00_000) {
+    const crore = abs / 1_00_00_000;
+    return `${sign}₹${crore.toFixed(crore % 1 === 0 ? 0 : 1)}Cr`;
+  }
+  if (abs >= 1_00_000) {
+    const lakh = abs / 1_00_000;
+    return `${sign}₹${lakh.toFixed(lakh % 1 === 0 ? 0 : 1)}L`;
+  }
+  return `${sign}${formatMoney(abs, "INR")}`;
+}
+
 /** Midpoint of a range, for averages. Null when the range is empty. */
 export function rangeMidpoint(range: MoneyRange): number | null {
   const { min, max } = range;

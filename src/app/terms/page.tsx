@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CONTACT_EMAIL } from "@/config/site";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
+  path: "/terms",
   title: "Terms of Service",
   description:
     "The terms that apply when you use Gradmire's website, tools, and applicant portal.",
-};
+});
 
 const LAST_UPDATED = "11 September 2026";
 

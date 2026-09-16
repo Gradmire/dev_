@@ -14,13 +14,14 @@ import {
 } from "@/config/site";
 import { CONSENT_PURPOSES, PURPOSE_ORDER } from "@/lib/consent/purposes";
 import { MINOR_AGE_THRESHOLD } from "@/lib/consent/age";
+import { routeMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
+  path: "/privacy",
   title: "Privacy Policy",
   description:
     "How Gradmire collects, uses, shares and protects your personal data, your rights under India's Digital Personal Data Protection Act, 2023, and how to contact our Grievance Officer.",
-  alternates: { canonical: "/privacy" },
-};
+});
 
 const LAST_UPDATED = "15 September 2026";
 

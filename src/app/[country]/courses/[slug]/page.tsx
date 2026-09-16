@@ -8,6 +8,7 @@ import { getCourseHub, getAllHubPaths, formatRange } from "@/lib/queries";
 import { isDatabaseConfigured } from "@/db";
 import { Container } from "@/components/ui/container";
 import { Cta } from "@/components/ui/cta";
+import { routeMetadata } from "@/lib/metadata";
 
 // Next requires route segment config to be a literal it can statically
 // extract, so this cannot reference CONTENT_REVALIDATE_SECONDS directly.
@@ -32,14 +33,14 @@ export async function generateMetadata({
   const tuition = formatRange(hub.tuitionMin, hub.tuitionMax, hub.currency, {
     suffix: "/year",
   });
-  return {
+  return routeMetadata({
+    path: `/${country}/courses/${slug}`,
     title: `${hub.name} in the ${hub.destination.name}`,
     description:
       hub.oneLiner ??
       `${hub.name} master's courses in the ${hub.destination.name}${tuition ? ` — tuition ${tuition}` : ""}.`,
-    alternates: { canonical: `/${country}/courses/${slug}` },
-    robots: hub.status === "stub" ? { index: false, follow: true } : undefined,
-  };
+    noIndex: hub.status === "stub",
+  });
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -175,7 +176,7 @@ export default async function CourseHubPage({
             <Container>
               <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
                 <h2 className="text-h3">
-                  Top universities for {hub.name.split(" ")[0]}
+                  Top universities for {hub.name}
                 </h2>
                 <span className="font-mono text-meta uppercase tracking-wide text-ink-soft">
                   Subject-ranked, not overall rank

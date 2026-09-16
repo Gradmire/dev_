@@ -7,7 +7,21 @@
  * every value is serialisable (icons are referenced by name, not component).
  */
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gradmire.com";
+/**
+ * Vercel exposes these to the client bundle under the `NEXT_PUBLIC_` names
+ * only when "Automatically expose System Environment Variables" is on for
+ * the project; `NEXT_PUBLIC_SITE_URL` should be set explicitly in
+ * production so canonical/OG URLs don't depend on that toggle, but this
+ * keeps preview deploys and any environment where it isn't set pointed at
+ * a real, reachable host instead of an unregistered placeholder domain.
+ */
+const VERCEL_URL =
+  process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ??
+  process.env.NEXT_PUBLIC_VERCEL_URL;
+
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (VERCEL_URL ? `https://${VERCEL_URL}` : "http://localhost:3000");
 
 /**
  * The destination V1 leads with. The homepage board, the contact form's

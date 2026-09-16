@@ -15,7 +15,6 @@ import { PRIMARY_DESTINATION, SITE_URL } from "@/config/site";
 import { Container } from "@/components/ui/container";
 import { Cta } from "@/components/ui/cta";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CourseCardSkeleton } from "@/components/ui/course-card-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ImageWithSkeleton } from "@/components/ui/image-with-skeleton";
 
@@ -38,9 +37,11 @@ async function HeroHubStat({ hubsPromise }: { hubsPromise: Promise<CourseHub[]> 
 }
 
 /**
- * Streams independently of the shell above it: the header, hero copy and
- * "Why the UK" grid paint immediately, and this grid (or its skeleton, or
- * the empty state) fills in once the hub read resolves.
+ * Awaited directly rather than streamed behind a Suspense boundary — the
+ * Suspense-boundary swap relies on an inline script tag to replace the
+ * fallback once the promise resolves, so with JavaScript disabled the
+ * fallback skeleton would be the only thing that ever renders. Awaiting
+ * here means the resolved grid is what ships in the initial HTML.
  */
 async function CourseGrid({ hubsPromise }: { hubsPromise: Promise<CourseHub[]> }) {
   const hubs = await hubsPromise;
@@ -68,16 +69,6 @@ async function CourseGrid({ hubsPromise }: { hubsPromise: Promise<CourseHub[]> }
         />
       ))}
     </Reveal>
-  );
-}
-
-function CourseGridSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <CourseCardSkeleton key={i} />
-      ))}
-    </div>
   );
 }
 
@@ -228,10 +219,15 @@ export default async function HomePage() {
                     href={`/${d.slug}`}
                     className="group relative flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl p-6 text-white shadow-card"
                   >
+                    {/* TODO(real photography): each live destination needs
+                        its own real campus/city photo here — this local SVG
+                        is a stand-in so the card no longer depends on a
+                        third-party image host. */}
                     <ImageWithSkeleton
-                      src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=900&q=60"
+                      src="/placeholders/destination-hero.svg"
                       alt={`${d.name} university lecture hall — placeholder, replace with real campus photography`}
                       fill
+                      unoptimized
                       sizes="(min-width: 1024px) 33vw, 100vw"
                       wrapperClassName="absolute inset-0"
                       className="transition-transform duration-500 group-hover:scale-105"
@@ -309,9 +305,7 @@ export default async function HomePage() {
               </p>
             </Reveal>
 
-            <Suspense fallback={<CourseGridSkeleton />}>
-              <CourseGrid hubsPromise={hubsPromise} />
-            </Suspense>
+            <CourseGrid hubsPromise={hubsPromise} />
           </Container>
         </section>
 

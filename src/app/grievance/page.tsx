@@ -7,13 +7,14 @@ import { Container } from "@/components/ui/container";
 import { GrievanceForm } from "@/components/rights/grievance-form";
 import { GRIEVANCE_OFFICER, RIGHTS_SLA } from "@/config/site";
 import { getSessionUser } from "@/lib/supabase/server";
+import { routeMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
+  path: "/grievance",
   title: "Raise a grievance",
   description:
     "Complain about how Gradmire has handled your personal data. Our Grievance Officer responds within 30 days, and you can escalate to the Data Protection Board of India.",
-  alternates: { canonical: "/grievance" },
-};
+});
 
 export const dynamic = "force-dynamic";
 
