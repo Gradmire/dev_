@@ -100,7 +100,7 @@ export default async function CourseHubPage({
               for this subject — we publish a hub only once the figures are sourced.
             </p>
             <Cta href="/contact">
-              Talk to a counselor anyway
+              Talk to me anyway
               <ArrowRight size={15} aria-hidden="true" />
             </Cta>
           </div>
@@ -342,8 +342,7 @@ export default async function CourseHubPage({
                 Get a shortlist for {hub.name}
               </h2>
               <p className="mx-auto mb-6 max-w-[46ch] text-lede text-white/85">
-                Free 20-minute consultation with a counselor who specializes in this
-                subject.
+                Free 20-minute consultation with me — I focus on this subject.
               </p>
               <Cta href={`/contact?course=${hub.slug}`} variant="onDark">
                 Book free consultation
