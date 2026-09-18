@@ -33,6 +33,7 @@ export function Globe() {
         { location: [-25.2744, 133.7751], size: 0.05 },
       ],
       // @ts-expect-error cobe types don't include onRender but it's valid
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onRender: (state: Record<string, any>) => {
         // Called on every animation frame.
         // `state` will be an empty object, return updated params.
