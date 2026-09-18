@@ -32,7 +32,8 @@ export function Globe() {
         // Australia
         { location: [-25.2744, 133.7751], size: 0.05 },
       ],
-      onRender: (state) => {
+      // @ts-expect-error cobe types don't include onRender but it's valid
+      onRender: (state: Record<string, any>) => {
         // Called on every animation frame.
         // `state` will be an empty object, return updated params.
         state.phi = phi;
