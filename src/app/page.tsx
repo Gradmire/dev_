@@ -17,6 +17,7 @@ import { Cta } from "@/components/ui/cta";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ImageWithSkeleton } from "@/components/ui/image-with-skeleton";
+import { Globe } from "@/components/ui/globe";
 
 type CourseHub = Awaited<ReturnType<typeof getCourseHubs>>[number];
 
@@ -140,37 +141,43 @@ export default async function HomePage() {
 
       <main id="main">
         {/* ---------- Hero ---------- */}
-        <section className="hero-texture gutter pb-16 pt-20">
+        <section className="hero-texture gutter pb-16 pt-20 overflow-hidden">
           <Container>
-            <div className="max-w-[640px]">
-              <HeroReveal>
-                <span className="eyebrow">Study abroad, reordered</span>
-                <h1 className="my-4 max-w-[15ch] text-h1">
-                  Find your course. Then find{" "}
-                  <em className="font-medium italic text-sky">the UK</em> around it.
-                </h1>
-                <p className="mb-8 max-w-[46ch] text-lede text-ink-soft">
-                  Most platforms start with &ldquo;pick a country.&rdquo; We start with
-                  what actually shapes your career — your subject. Get matched to
-                  programmes first, then the universities and cities built around them.
-                </p>
-                <div className="mb-9 flex flex-wrap gap-3.5">
-                  <Cta
-                    href="#courses"
-                    variant="accent"
-                    className="shadow-[0_10px_22px_-10px_rgba(41,141,198,0.55)]"
-                  >
-                    Find my course
-                    <ArrowRight size={15} aria-hidden="true" />
-                  </Cta>
-                  <Cta href="/tools/course-finder" variant="outline">
-                    Take the quiz
-                  </Cta>
-                </div>
-                <Suspense fallback={<Skeleton className="h-[19px] w-64" />}>
-                  <HeroHubStat hubsPromise={hubsPromise} />
-                </Suspense>
-              </HeroReveal>
+            <div className="relative flex flex-col items-center justify-between gap-10 lg:flex-row">
+              <div className="relative z-10 w-full max-w-[640px] shrink-0">
+                <HeroReveal>
+                  <span className="eyebrow">Study abroad, reordered</span>
+                  <h1 className="my-4 max-w-[15ch] text-h1">
+                    Find your course. Then find{" "}
+                    <em className="font-medium italic text-sky">the UK</em> around it.
+                  </h1>
+                  <p className="mb-8 max-w-[46ch] text-lede text-ink-soft">
+                    Most platforms start with &ldquo;pick a country.&rdquo; We start with
+                    what actually shapes your career — your subject. Get matched to
+                    programmes first, then the universities and cities built around them.
+                  </p>
+                  <div className="mb-9 flex flex-wrap gap-3.5">
+                    <Cta
+                      href="#courses"
+                      variant="accent"
+                      className="shadow-[0_10px_22px_-10px_rgba(41,141,198,0.55)]"
+                    >
+                      Find my course
+                      <ArrowRight size={15} aria-hidden="true" />
+                    </Cta>
+                    <Cta href="/tools/course-finder" variant="outline">
+                      Take the quiz
+                    </Cta>
+                  </div>
+                  <Suspense fallback={<Skeleton className="h-[19px] w-64" />}>
+                    <HeroHubStat hubsPromise={hubsPromise} />
+                  </Suspense>
+                </HeroReveal>
+              </div>
+
+              <div className="relative hidden w-full max-w-[600px] lg:absolute lg:right-[-50px] lg:top-1/2 lg:block lg:-translate-y-1/2">
+                <Globe />
+              </div>
             </div>
           </Container>
         </section>
